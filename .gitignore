@@ -1,0 +1,15 @@
+# SSH Keys (NEVER commit private keys)
+id_ed25519
+id_ed25519.pub
+*.key
+*.pem
+
+# Git Tools / Zip
+.git-tool/
+mingit.zip
+
+# Backups and temporary files
+*.backup.html
+*.tmp
+.DS_Store
+Thumbs.db

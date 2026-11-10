@@ -1,0 +1,1767 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d1117">
+    <title>TypeQuick — Minimalist Typing Test</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Dark Theme (Default) */
+            --bg: #0d1117;
+            --surface: #161b22;
+            --surface-subtle: #1f242d;
+            --surface-hover: #262c37;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.16);
+            --border-focus: rgba(56, 189, 248, 0.4);
+            
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            
+            --char-untyped: #484f58;
+            --char-correct: #e6edf3;
+            --char-incorrect: #f43f5e;
+            --char-incorrect-bg: rgba(244, 63, 94, 0.12);
+            
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.2);
+            --accent-contrast: #0b1320;
+            --caret: #38bdf8;
+            
+            --success: #34d399;
+            --danger: #f43f5e;
+            
+            --card-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.55);
+            --kbd-bg: rgba(255, 255, 255, 0.06);
+            --kbd-border: rgba(255, 255, 255, 0.12);
+            
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --radius-pill: 9999px;
+            
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        [data-theme="light"] {
+            --bg: #f6f8fa;
+            --surface: #ffffff;
+            --surface-subtle: #f0f2f5;
+            --surface-hover: #e5e8ec;
+            --border: rgba(0, 0, 0, 0.08);
+            --border-hover: rgba(0, 0, 0, 0.16);
+            --border-focus: rgba(2, 132, 199, 0.4);
+            
+            --text-primary: #1f2328;
+            --text-secondary: #57606a;
+            --text-muted: #8c959f;
+            
+            --char-untyped: #a0a8b3;
+            --char-correct: #1f2328;
+            --char-incorrect: #e11d48;
+            --char-incorrect-bg: rgba(225, 29, 72, 0.08);
+            
+            --accent: #0284c7;
+            --accent-glow: rgba(2, 132, 199, 0.18);
+            --accent-contrast: #ffffff;
+            --caret: #0284c7;
+            
+            --success: #16a34a;
+            --danger: #e11d48;
+            
+            --card-shadow: 0 20px 48px -12px rgba(31, 35, 40, 0.08);
+            --kbd-bg: rgba(0, 0, 0, 0.05);
+            --kbd-border: rgba(0, 0, 0, 0.12);
+        }
+
+        body {
+            min-height: 100vh;
+            padding: 40px 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--bg);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            transition: background-color .3s ease, color .3s ease;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            width: min(100%, 980px);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            padding: clamp(24px, 4vw, 44px);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--card-shadow);
+            position: relative;
+            transition: background-color .3s ease, border-color .3s ease, box-shadow .3s ease;
+        }
+
+        /* ─── Top Navigation & Header ─── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .brand-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: var(--radius-sm);
+            background: var(--surface-subtle);
+            border: 1px solid var(--border);
+            color: var(--accent);
+        }
+
+        .brand-icon svg {
+            width: 19px;
+            height: 19px;
+        }
+
+        .title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.4px;
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand-tag {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: var(--radius-pill);
+            background: var(--accent-glow);
+            color: var(--accent);
+            border: 1px solid var(--border-focus);
+        }
+
+        .pb-badge {
+            font-size: 0.72rem;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            padding: 3px 9px;
+            border-radius: var(--radius-pill);
+            background: var(--surface-subtle);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .pb-badge span {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .new-pb-alert {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--success);
+            background: rgba(52, 211, 153, 0.12);
+            border: 1px solid rgba(52, 211, 153, 0.3);
+            border-radius: var(--radius-pill);
+            padding: 5px 14px;
+            margin-bottom: 16px;
+        }
+
+        .subtitle {
+            display: none; /* Keep element in DOM if needed, but remove visual clutter for minimalist aesthetic */
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* ─── Minimal Segmented Time Pills ─── */
+        .time-select {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .time-select label {
+            display: none; /* Hide visual label for cleaner look; aria attributes provide accessibility */
+        }
+
+        .time-pills {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px;
+            background: var(--surface-subtle);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-pill);
+            gap: 2px;
+        }
+
+        .pill-btn {
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            font-weight: 500;
+            padding: 6px 14px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .pill-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .pill-btn.active {
+            background: var(--accent);
+            color: var(--accent-contrast);
+            font-weight: 600;
+            box-shadow: 0 2px 8px var(--accent-glow);
+        }
+
+        /* Hidden fallback native select for code compatibility */
+        select#duration {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+            width: 0;
+            height: 0;
+        }
+
+        /* ─── Top Hairline Progress Bar ─── */
+        .progress-track {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: transparent;
+            border-top-left-radius: var(--radius-lg);
+            border-top-right-radius: var(--radius-lg);
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--accent);
+            transition: width 0.15s ease-out;
+        }
+
+        /* ─── Header Theme Toggle Button ─── */
+        .icon-btn, .theme-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: var(--surface-subtle);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-pill);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .icon-btn:hover, .theme-toggle:hover {
+            color: var(--text-primary);
+            border-color: var(--border-hover);
+            transform: scale(1.04);
+        }
+
+        .icon-btn.active {
+            color: var(--accent);
+            border-color: var(--border-focus);
+            background: var(--accent-glow);
+        }
+
+        .icon-btn svg, .theme-toggle svg {
+            width: 17px;
+            height: 17px;
+        }
+
+        /* ─── Telemetry / Stats Bar ─── */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin: 4px 0 6px;
+        }
+
+        .box {
+            padding: 16px 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            text-align: center;
+            background: var(--surface-subtle);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            transition: border-color .2s ease, transform .2s ease;
+        }
+
+        .box:hover {
+            border-color: var(--border-hover);
+        }
+
+        .box p {
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        #wpm, #accuracy, #time, #mistakes {
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: clamp(1.6rem, 2.8vw, 2.1rem);
+            line-height: 1.1;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        #wpm {
+            color: var(--accent);
+        }
+
+        /* Section Heading */
+        h3 {
+            display: none; /* Hide loud emoji header to achieve calm minimalist aesthetic */
+        }
+
+        /* ─── Typing Paragraph Area ─── */
+        .paragraph-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .paragraph {
+            width: 100%;
+            height: clamp(200px, 32vh, 310px);
+            padding: 24px 26px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            background: var(--surface-subtle);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: var(--char-untyped);
+            font-family: var(--font-mono);
+            font-size: clamp(1.2rem, 1.8vw, 1.45rem);
+            line-height: 1.85;
+            letter-spacing: 0.01em;
+            outline: none;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            user-select: none;
+            cursor: text;
+            transition: border-color .2s ease, box-shadow .2s ease;
+        }
+
+        .paragraph:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        /* Custom subtle scrollbar */
+        .paragraph::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .paragraph::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .paragraph::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 999px;
+        }
+
+        .paragraph::-webkit-scrollbar-thumb:hover {
+            background: var(--border-hover);
+        }
+
+        /* Focus prompt hint */
+        .focus-prompt {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(13, 17, 23, 0.7);
+            backdrop-filter: blur(4px);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 500;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        [data-theme="light"] .focus-prompt {
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        .paragraph-wrapper.unfocused .focus-prompt {
+            opacity: 1;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        /* ─── Characters & Caret ─── */
+        .character {
+            position: relative;
+            transition: color 0.12s ease;
+        }
+
+        .correct {
+            color: var(--char-correct);
+        }
+
+        .incorrect {
+            color: var(--char-incorrect);
+            background: var(--char-incorrect-bg);
+            border-radius: 3px;
+        }
+
+        .mistake-underline {
+            text-decoration: underline;
+            text-decoration-color: var(--char-incorrect);
+            text-decoration-thickness: 2px;
+            text-underline-offset: 4px;
+        }
+
+        .character.current::before,
+        .paragraph.cursor-at-end::after {
+            content: "";
+            display: inline-block;
+            width: 2px;
+            height: 1.15em;
+            background: var(--caret);
+            border-radius: 1px;
+            vertical-align: -0.15em;
+            animation: caretPulse 1s infinite cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 8px var(--caret);
+        }
+
+        .character.current::before {
+            margin-left: -2px;
+        }
+
+        @keyframes caretPulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.15;
+            }
+        }
+
+        /* ─── Meta Row (Legend & Status Message) ─── */
+        .meta-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 0 4px;
+        }
+
+        .legend {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.dot-correct {
+            background-color: var(--success);
+        }
+
+        .legend-dot.dot-incorrect {
+            background-color: var(--danger);
+        }
+
+        .legend .correct, .legend .incorrect {
+            color: inherit;
+        }
+
+        .message {
+            min-height: 22px;
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-align: right;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .message-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: inline-block;
+            animation: blink 2s infinite;
+        }
+
+        /* ─── Action Controls / Buttons ─── */
+        .button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 6px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 42px;
+            padding: 10px 20px;
+            border-radius: var(--radius-pill);
+            font-family: var(--font-sans);
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+            outline: none;
+            user-select: none;
+        }
+
+        .btn svg {
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+        }
+
+        .btn:focus-visible {
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        /* Primary Button (Start) */
+        .start {
+            background: var(--accent);
+            color: var(--accent-contrast);
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        .start:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px var(--accent-glow);
+        }
+
+        .start:active {
+            transform: translateY(0);
+        }
+
+        /* Secondary Buttons (Restart, New Paragraph) */
+        .restart, .new-paragraph {
+            background: var(--surface-subtle);
+            border-color: var(--border);
+            color: var(--text-primary);
+        }
+
+        .restart:hover, .new-paragraph:hover {
+            background: var(--surface-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-1px);
+        }
+
+        .restart:active, .new-paragraph:active {
+            transform: translateY(0);
+        }
+
+        .kbd-hint {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 6px;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            font-weight: 500;
+            line-height: 1;
+            color: var(--text-muted);
+            background: var(--kbd-bg);
+            border: 1px solid var(--kbd-border);
+            border-radius: 4px;
+            margin-left: 2px;
+        }
+
+        /* ─── Results Banner / Modal ─── */
+        .results-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(13, 17, 23, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 24px;
+        }
+
+        [data-theme="light"] .results-overlay {
+            background: rgba(255, 255, 255, 0.88);
+        }
+
+        .results-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .results-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: clamp(24px, 4vw, 36px);
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .results-overlay.active .results-card {
+            transform: scale(1);
+        }
+
+        .results-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent);
+            background: var(--accent-glow);
+            padding: 4px 12px;
+            border-radius: var(--radius-pill);
+            margin-bottom: 16px;
+        }
+
+        .results-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+            letter-spacing: -0.5px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .result-stat {
+            background: var(--surface-subtle);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+        }
+
+        .result-stat-val {
+            font-family: var(--font-mono);
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .result-stat-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* ─── Caps Lock Indicator ─── */
+        .caps-warning {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--danger);
+            background: var(--char-incorrect-bg);
+            border: 1px solid rgba(244, 63, 94, 0.28);
+            padding: 2px 8px;
+            border-radius: var(--radius-pill);
+        }
+
+        .caps-warning.active {
+            display: inline-flex;
+        }
+
+        /* ─── Results Chart ─── */
+        .result-chart-container {
+            background: var(--surface-subtle);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .chart-title {
+            color: var(--text-muted);
+        }
+
+        .chart-peak {
+            color: var(--accent);
+            font-family: var(--font-mono);
+        }
+
+        .result-svg-chart {
+            width: 100%;
+            height: 72px;
+            display: block;
+        }
+
+        /* ─── Shortcuts Footer ─── */
+        .shortcuts-footer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 18px;
+            padding-top: 10px;
+            color: var(--text-muted);
+            font-size: 0.76rem;
+            font-weight: 500;
+        }
+
+        .shortcut-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ─── Responsive Media Queries ─── */
+        @media (max-width: 768px) {
+            body {
+                padding: 16px 12px;
+            }
+
+            .container {
+                padding: 20px 16px;
+                gap: 18px;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .box {
+                padding: 12px 8px;
+            }
+
+            .meta-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .message {
+                text-align: left;
+            }
+
+            .header {
+                justify-content: space-between;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .button {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .time-pills .pill-btn {
+                padding: 5px 10px;
+                font-size: 0.78rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Top Hairline Progress Bar -->
+        <div class="progress-track" aria-hidden="true">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <!-- Header: Minimal brand + Duration pills + Theme Toggle -->
+        <header class="header">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="4" width="20" height="16" rx="3" ry="3"></rect>
+                        <line x1="6" y1="8" x2="6.01" y2="8"></line>
+                        <line x1="10" y1="8" x2="10.01" y2="8"></line>
+                        <line x1="14" y1="8" x2="14.01" y2="8"></line>
+                        <line x1="18" y1="8" x2="18.01" y2="8"></line>
+                        <line x1="7" y1="12" x2="17" y2="12"></line>
+                        <line x1="7" y1="16" x2="17" y2="16"></line>
+                    </svg>
+                </div>
+                <h1 class="title">
+                    TypeQuick
+                    <span class="brand-tag">speed</span>
+                </h1>
+            </div>
+
+            <!-- Kept for accessibility & structure -->
+            <h2 class="subtitle">Practice here and improve your skill!</h2>
+
+            <div class="header-controls">
+                <div class="time-select">
+                    <label for="duration">select time: </label>
+                    <div class="time-pills" id="timePills" role="radiogroup" aria-label="Test Duration">
+                        <button type="button" class="pill-btn active" data-time="60" role="radio" aria-checked="true">1 min</button>
+                        <button type="button" class="pill-btn" data-time="120" role="radio" aria-checked="false">2 min</button>
+                        <button type="button" class="pill-btn" data-time="180" role="radio" aria-checked="false">3 min</button>
+                    </div>
+                    <select id="duration" aria-hidden="true" tabindex="-1">
+                        <option value="60" selected>1 Minutes</option>
+                        <option value="120">2 Minutes</option>
+                        <option value="180">3 Minutes</option>
+                    </select>
+                </div>
+
+                <button type="button" class="theme-toggle" id="themeToggle" title="Toggle theme (Light / Dark)" aria-label="Toggle theme">
+                    <svg id="themeIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg id="themeIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Bar -->
+        <div class="stats">
+            <div class="box">
+                <h2 id="wpm">0</h2>
+                <p>WPM</p>
+            </div>
+
+            <div class="box">
+                <h2 id="accuracy">100%</h2>
+                <p>Accuracy</p>
+            </div>
+
+            <div class="box">
+                <h2 id="time">60</h2>
+                <p>Time left</p>
+            </div>
+
+            <div class="box">
+                <h2 id="mistakes">0</h2>
+                <p>Mistakes</p>
+            </div>
+        </div>
+
+        <h3>📝 Type the following paragraph</h3>
+
+        <!-- Typing Paragraph Box -->
+        <div class="paragraph-wrapper" id="paragraphWrapper">
+            <div class="paragraph" tabindex="0" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Type text here"></div>
+            <div class="focus-prompt" id="focusPrompt">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 3h6v6"></path>
+                    <path d="M9 21H3v-6"></path>
+                    <path d="M21 3l-7 7"></path>
+                    <path d="M3 21l7-7"></path>
+                </svg>
+                <span>Click here or press any key to focus</span>
+            </div>
+        </div>
+
+        <!-- Meta: Legend and Status Message -->
+        <div class="meta-row">
+            <div class="legend">
+                <span class="legend-item"><span class="legend-dot dot-correct"></span> <span class="correct">correct</span></span>
+                <span class="legend-item"><span class="legend-dot dot-incorrect"></span> <span class="incorrect">incorrect</span></span>
+                <div class="caps-warning" id="capsWarning">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 3l7 7h-4v8h-6v-8h-4z"></path>
+                    </svg>
+                    <span>Caps Lock</span>
+                </div>
+            </div>
+
+            <p class="message">
+                <span class="message-dot"></span>
+                <span id="messageText">Select your time and Click Start Test</span>
+            </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="button">
+            <button class="btn start">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="6 4 19 12 6 20 6 4"></polygon>
+                </svg>
+                <span>Start Test</span>
+            </button>
+            <button class="btn restart">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 2v6h-6"></path>
+                    <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+                    <path d="M3 22v-6h6"></path>
+                    <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                </svg>
+                <span>Restart</span>
+                <kbd class="kbd-hint">Tab</kbd>
+            </button>
+            <button class="btn new-paragraph">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16 3 21 3 21 8"></polyline>
+                    <line x1="4" y1="20" x2="21" y2="3"></line>
+                    <polyline points="21 16 21 21 16 21"></polyline>
+                    <line x1="15" y1="15" x2="21" y2="21"></line>
+                    <line x1="4" y1="4" x2="9" y2="9"></line>
+                </svg>
+                <span>New Paragraph</span>
+            </button>
+        </div>
+
+        <!-- Shortcuts Footer -->
+        <footer class="shortcuts-footer">
+            <span class="shortcut-item"><kbd class="kbd-hint">Tab</kbd> restart</span>
+            <span class="shortcut-item"><kbd class="kbd-hint">Esc</kbd> reset modal</span>
+            <span class="shortcut-item"><kbd class="kbd-hint">Any key</kbd> auto start</span>
+        </footer>
+
+        <!-- Modern Result Overlay -->
+        <div class="results-overlay" id="resultsOverlay" aria-modal="true" role="dialog">
+            <div class="results-card">
+                <div class="results-badge">Completed</div>
+                <h3 class="results-title">Test Results</h3>
+                <div class="results-grid">
+                    <div class="result-stat">
+                        <div class="result-stat-val" id="finalWpm">0</div>
+                        <div class="result-stat-label">Words Per Minute</div>
+                    </div>
+                    <div class="result-stat">
+                        <div class="result-stat-val" id="finalAccuracy">100%</div>
+                        <div class="result-stat-label">Accuracy</div>
+                    </div>
+                    <div class="result-stat">
+                        <div class="result-stat-val" id="finalMistakes">0</div>
+                        <div class="result-stat-label">Mistakes</div>
+                    </div>
+                    <div class="result-stat">
+                        <div class="result-stat-val" id="finalTime">60s</div>
+                        <div class="result-stat-label">Time Elapsed</div>
+                    </div>
+                </div>
+
+                <!-- WPM Timeline Chart -->
+                <div class="result-chart-container" id="resultChartContainer">
+                    <div class="chart-header">
+                        <span class="chart-title">WPM Pace</span>
+                        <span class="chart-peak" id="chartPeak">Peak: 0 WPM</span>
+                    </div>
+                    <svg class="result-svg-chart" id="resultSvgChart" viewBox="0 0 400 90" preserveAspectRatio="none">
+                        <defs>
+                            <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.35"/>
+                                <stop offset="100%" stop-color="var(--accent)" stop-opacity="0.0"/>
+                            </linearGradient>
+                        </defs>
+                        <path id="chartArea" fill="url(#chartGradient)" d=""/>
+                        <path id="chartLine" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d=""/>
+                    </svg>
+                </div>
+
+                <button class="btn start" id="modalRestartBtn" style="width: 100%;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 2v6h-6"></path>
+                        <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+                        <path d="M3 22v-6h6"></path>
+                        <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                    </svg>
+                    <span>Practice Again (Tab)</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+<script>
+
+    const duration = document.getElementById("duration");
+    const paragraph = document.querySelector(".paragraph");
+    const paragraphWrapper = document.getElementById("paragraphWrapper");
+    const focusPrompt = document.getElementById("focusPrompt");
+    const startBtn = document.querySelector(".start");
+    const restartBtn = document.querySelector(".restart");
+    const newParagraphBtn = document.querySelector(".new-paragraph");
+
+    const wpmDisplay = document.getElementById("wpm");
+    const accuracyDisplay = document.getElementById("accuracy");
+    const timeDisplay = document.getElementById("time");
+    const mistakesDisplay = document.getElementById("mistakes");
+    const message = document.querySelector(".message");
+    const messageText = document.getElementById("messageText");
+
+    const timePills = document.querySelectorAll(".time-pills .pill-btn");
+    const themeToggle = document.getElementById("themeToggle");
+    const themeIconSun = document.getElementById("themeIconSun");
+    const themeIconMoon = document.getElementById("themeIconMoon");
+
+    const progressBar = document.getElementById("progressBar");
+    const capsWarning = document.getElementById("capsWarning");
+
+    const resultsOverlay = document.getElementById("resultsOverlay");
+    const finalWpm = document.getElementById("finalWpm");
+    const finalAccuracy = document.getElementById("finalAccuracy");
+    const finalMistakes = document.getElementById("finalMistakes");
+    const finalTime = document.getElementById("finalTime");
+    const modalRestartBtn = document.getElementById("modalRestartBtn");
+
+    const chartPeak = document.getElementById("chartPeak");
+    const chartLine = document.getElementById("chartLine");
+    const chartArea = document.getElementById("chartArea");
+
+    let wpmHistory = [];
+
+    function renderWpmChart() {
+        if (!chartLine || !chartArea) return;
+        if (wpmHistory.length < 2) {
+            const currentWpmVal = Number(wpmDisplay.textContent) || 0;
+            wpmHistory.push({ time: 1, wpm: currentWpmVal });
+        }
+
+        const maxWpm = Math.max(...wpmHistory.map(p => p.wpm), 20);
+        const maxTime = Math.max(...wpmHistory.map(p => p.time), 1);
+        if (chartPeak) {
+            chartPeak.textContent = "Peak: " + maxWpm + " WPM";
+        }
+
+        const width = 400;
+        const height = 90;
+        const padding = 10;
+
+        const points = wpmHistory.map(p => {
+            const x = padding + (p.time / maxTime) * (width - padding * 2);
+            const y = height - padding - (p.wpm / maxWpm) * (height - padding * 2);
+            return [x, y];
+        });
+
+        let linePath = `M ${points[0][0]} ${points[0][1]}`;
+        for (let i = 1; i < points.length; i++) {
+            linePath += ` L ${points[i][0]} ${points[i][1]}`;
+        }
+
+        const lastX = points[points.length - 1][0];
+        const firstX = points[0][0];
+        const areaPath = `${linePath} L ${lastX} ${height} L ${firstX} ${height} Z`;
+
+        chartLine.setAttribute("d", linePath);
+        chartArea.setAttribute("d", areaPath);
+    }
+
+    function setMessage(text) {
+        if (messageText) {
+            messageText.textContent = text;
+        } else if (message) {
+            message.textContent = text;
+        }
+    }
+
+    const paragraphs = {
+
+        short: [
+            "Learning to type faster takes regular practice and patience. Focus on accuracy first and gradually increase your speed. Every minute of practice helps you improve. Developing good typing habits can save time and make your work easier. Stay focused, avoid unnecessary mistakes and keep practising every day to achieve better results.",
+
+            "Technology makes our lives easier in many ways. Students can use computers and the internet to learn new skills, explore ideas and complete their work. However, using technology wisely is important. Good habits, regular practice and proper time management can help students become more confident and independent in their daily lives.",
+
+            "A good student understands the importance of time and discipline. Small efforts made every day can lead to big achievements. Learning something new requires patience and consistency. Instead of worrying about mistakes, we should learn from them and continue improving. Stay focused on your goals and never stop learning.",
+
+            "Reading is a useful habit that improves knowledge and communication skills. Books introduce us to new ideas and help us understand the world around us. Even a few minutes of reading every day can improve vocabulary and imagination. The more we read, the better we become at expressing our thoughts.",
+
+            "Every new skill takes time to develop. At first, a task may seem difficult, but regular practice makes it easier. The important thing is to remain patient and avoid giving up too quickly. Mistakes are a natural part of learning. Keep trying, stay consistent and celebrate your progress."
+        ],
+
+        medium: [
+            "Learning programming is an important skill in the modern world. Students can solve problems, build websites and create useful applications with the help of different programming languages. Regular practice improves logical thinking and confidence. Start with simple programs and gradually work on more challenging projects. When an error appears, try to understand its reason instead of simply copying a solution. Patience and consistency are the keys to becoming a better programmer.",
+
+            "Reading books helps us develop knowledge, imagination and communication skills. It introduces us to new ideas and different perspectives. Students who read regularly often become better writers and thinkers. Reading also improves concentration and helps people understand complex topics more easily. Even spending a few minutes reading each day can make a difference. Good habits grow through consistent effort, and reading is one of the most valuable habits anyone can develop.",
+
+            "The internet has changed the way people learn and communicate. Students can access educational videos, tutorials and online courses from almost anywhere. They can explore different subjects and learn practical skills at their own pace. However, managing screen time and checking information carefully are equally important. Spending too much time on entertainment can reduce productivity. Technology is most useful when we use it wisely, stay focused and make it a part of our learning journey.",
+
+            "Time management is an essential skill for students. A proper routine helps people complete assignments, prepare for examinations and make time for personal interests. Setting realistic goals makes large tasks easier to handle. It is better to divide work into smaller steps rather than trying to complete everything at once. Avoiding distractions and taking short breaks can improve concentration. Consistent effort is more valuable than studying for long hours without a clear plan.",
+
+            "Communication plays an important role in personal and professional life. Being able to explain ideas clearly helps people work together and solve problems. Good communication is not only about speaking confidently but also about listening carefully. Students can improve these skills by participating in discussions, asking questions and sharing their opinions. Respecting different viewpoints creates a positive environment. With regular practice, anyone can become a more effective communicator."
+        ],
+
+        long: [
+            "Computer science is a fascinating field that combines creativity, logic and problem solving. Students learn how computers work and how software can solve real world problems. Programming languages allow us to create websites, mobile applications and useful tools. At first, coding may seem difficult, but regular practice makes complicated ideas easier to understand. It is important to read errors carefully, test different solutions and learn from mistakes. Working on small projects is an excellent way to improve practical skills. Students should also develop communication and teamwork abilities because software development often involves working with other people. With patience and curiosity, beginners can gradually become confident programmers. The most important thing is to keep learning and never be afraid to try something new.",
+
+            "Time management is an essential skill for every student. A balanced routine helps students complete assignments, prepare for examinations and make time for personal interests. Setting realistic goals makes large tasks easier to handle. Instead of studying everything at once, divide the work into smaller steps and take short breaks when necessary. Avoiding distractions can improve concentration and productivity. It is also important to get enough sleep, eat healthy food and stay physically active. A healthy routine supports both physical and mental performance. Progress may sometimes feel slow, but consistent effort creates lasting improvement. Every day offers another opportunity to learn something useful and move closer to your goals.",
+
+            "The world of technology continues to develop at a remarkable speed. New tools are changing education, communication, healthcare and business. Students who understand digital technology can explore many exciting opportunities. However, technical knowledge alone is not enough. Communication, teamwork, creativity and critical thinking are also valuable skills. Building projects helps learners apply their knowledge in practical situations. When a problem appears, breaking it into smaller parts often makes it easier to solve. Mistakes are a natural part of the learning process, so patience is important. By staying curious, practising regularly and adapting to change, students can prepare themselves for future challenges. Learning should never stop because new opportunities often come from new knowledge.",
+
+            "Artificial intelligence is becoming an important part of modern life. It is used in education, healthcare, transportation and many other industries. AI systems can analyse information, recognise patterns and help people complete complex tasks. Students can use these tools to understand difficult topics, generate ideas and improve their learning process. However, depending entirely on technology can affect independent thinking and problem solving. It is important to understand the information provided by these systems and use them responsibly. Human creativity, judgement and communication remain valuable. The future will belong to people who can combine technical knowledge with practical skills and thoughtful decision making.",
+
+            "Developing a successful career requires more than academic knowledge. Communication, teamwork, creativity and problem solving are equally important in professional life. Students should gain practical experience through projects, internships and collaborative activities. These experiences help them understand real world challenges and improve their confidence. It is also important to stay updated with new technologies and industry trends. Instead of comparing progress with others, individuals should focus on improving their own abilities. Setting clear goals and following a consistent learning routine can gradually turn ambitions into achievements. Every small project and new experience can teach something valuable."
+        ]
+    };
+
+    let targetText = "";
+    let currentIndex = 0;
+    let mistakes = 0;
+    let timer = null;
+    let timeLeft = Number(duration.value);
+    let testStarted = false;
+    let testFinished = false;
+    let startTime = null;
+    let mistakePositions = [];
+    let lastParagraph = "";
+
+    function getRandomParagraph() {
+
+        const selectedTime = Number(duration.value);
+
+        let list;
+
+        if (selectedTime === 60) {
+            list = paragraphs.short;
+        }
+        else if (selectedTime === 120) {
+            list = paragraphs.medium;
+        }
+        else {
+            list = paragraphs.long;
+        }
+
+        let newParagraph;
+
+        do {
+            newParagraph = list[
+                Math.floor(Math.random() * list.length)
+            ];
+        }
+        while (
+            list.length > 1 &&
+            newParagraph === lastParagraph
+        );
+
+        lastParagraph = newParagraph;
+
+        return newParagraph;
+    }
+
+    function setParagraph(text) {
+
+        targetText = text;
+        currentIndex = 0;
+        mistakePositions = [];
+
+        paragraph.innerHTML = "";
+        paragraph.classList.remove("cursor-at-end");
+
+        for (let i = 0; i < targetText.length; i++) {
+
+            const span = document.createElement("span");
+
+            span.textContent = targetText[i];
+            span.classList.add("character");
+
+            paragraph.appendChild(span);
+        }
+
+        paragraph.scrollTop = 0;
+
+        updateParagraph();
+    }
+
+    function resetTest() {
+
+        clearInterval(timer);
+        timer = null;
+
+        testStarted = false;
+        testFinished = false;
+        startTime = null;
+
+        currentIndex = 0;
+        mistakes = 0;
+        mistakePositions = [];
+        wpmHistory = [];
+
+        timeLeft = Number(duration.value);
+
+        wpmDisplay.textContent = "0";
+        accuracyDisplay.textContent = "100%";
+        timeDisplay.textContent = timeLeft;
+        mistakesDisplay.textContent = "0";
+
+        if (progressBar) progressBar.style.width = "0%";
+
+        resultsOverlay.classList.remove("active");
+        paragraphWrapper.classList.remove("unfocused");
+
+        setParagraph(getRandomParagraph());
+
+        setMessage("Ready — start typing or click Start Test");
+    }
+
+    function startTest() {
+
+        if (testStarted) return;
+
+        if (testFinished) {
+            resetTest();
+        }
+
+        clearInterval(timer);
+
+        testStarted = true;
+        testFinished = false;
+
+        startTime = Date.now();
+        wpmHistory = [{ time: 0, wpm: 0 }];
+
+        timeLeft = Number(duration.value);
+        timeDisplay.textContent = timeLeft;
+
+        paragraph.focus();
+        paragraphWrapper.classList.remove("unfocused");
+
+        setMessage("Test in progress — keep a steady rhythm");
+
+        timer = setInterval(function () {
+
+            const elapsed = Math.floor(
+                (Date.now() - startTime) / 1000
+            );
+
+            timeLeft = Math.max(
+                0,
+                Number(duration.value) - elapsed
+            );
+
+            timeDisplay.textContent = timeLeft;
+
+            updateStats();
+
+            // Record telemetry for visual chart
+            const liveWpm = Number(wpmDisplay.textContent) || 0;
+            wpmHistory.push({ time: elapsed, wpm: liveWpm });
+
+            if (timeLeft <= 0) {
+                finishTest();
+            }
+
+        }, 200);
+    }
+
+    function updateParagraph() {
+
+        const spans = paragraph.querySelectorAll(".character");
+
+        spans.forEach(function (span, index) {
+
+            span.classList.remove(
+                "correct",
+                "incorrect",
+                "mistake-underline",
+                "current"
+            );
+
+            if (mistakePositions[index]) {
+
+                span.classList.add("incorrect");
+                span.classList.add("mistake-underline");
+
+            }
+            else if (index < currentIndex) {
+
+                span.classList.add("correct");
+
+            }
+
+            if (index === currentIndex) {
+                span.classList.add("current");
+            }
+
+        });
+
+        if (currentIndex === targetText.length) {
+            paragraph.classList.add("cursor-at-end");
+        }
+        else {
+            paragraph.classList.remove("cursor-at-end");
+        }
+    }
+
+    function getCorrectCount() {
+
+        let correctCount = 0;
+
+        for (let i = 0; i < currentIndex; i++) {
+
+            if (!mistakePositions[i]) {
+                correctCount++;
+            }
+
+        }
+
+        return correctCount;
+    }
+
+    function updateStats() {
+
+        if (!testStarted) return;
+
+        updateParagraph();
+
+        const elapsedSeconds = Math.max(
+            1,
+            (Date.now() - startTime) / 1000
+        );
+
+        const correctCount = getCorrectCount();
+
+        const wpm = Math.round(
+            (correctCount / 5) * (60 / elapsedSeconds)
+        );
+
+        const totalAttempts = correctCount + mistakes;
+
+        const accuracy = totalAttempts > 0
+            ? Math.round(
+                (correctCount / totalAttempts) * 100
+            )
+            : 100;
+
+        wpmDisplay.textContent = wpm;
+        accuracyDisplay.textContent = accuracy + "%";
+        mistakesDisplay.textContent = mistakes;
+
+        if (progressBar && targetText.length > 0) {
+            const pct = (currentIndex / targetText.length) * 100;
+            progressBar.style.width = Math.min(100, pct) + "%";
+        }
+
+        const spans = paragraph.querySelectorAll(".character");
+
+        if (spans[currentIndex]) {
+
+            spans[currentIndex].scrollIntoView({
+                block: "nearest",
+                inline: "nearest"
+            });
+
+        }
+        else if (spans.length > 0) {
+
+            spans[spans.length - 1].scrollIntoView({
+                block: "nearest",
+                inline: "nearest"
+            });
+
+        }
+
+        if (currentIndex === targetText.length) {
+            finishTest("Paragraph completed!");
+        }
+    }
+
+    function finishTest(customMessage) {
+
+        if (testFinished) return;
+
+        clearInterval(timer);
+        timer = null;
+
+        testStarted = false;
+        testFinished = true;
+
+        updateFinalStats();
+
+        const statusMsg = customMessage || "Time is up! Test completed.";
+        setMessage(statusMsg);
+
+        // Populate and display minimalist results overlay
+        const elapsedSec = startTime ? Math.round((Date.now() - startTime) / 1000) : Number(duration.value);
+        finalWpm.textContent = wpmDisplay.textContent;
+        finalAccuracy.textContent = accuracyDisplay.textContent;
+        finalMistakes.textContent = mistakesDisplay.textContent;
+        finalTime.textContent = Math.min(elapsedSec, Number(duration.value)) + "s";
+        
+        renderWpmChart();
+        resultsOverlay.classList.add("active");
+    }
+
+    function updateFinalStats() {
+
+        const elapsedSeconds = startTime
+            ? Math.max(
+                1,
+                Math.min(
+                    Number(duration.value),
+                    (Date.now() - startTime) / 1000
+                )
+            )
+            : 1;
+
+        const correctCount = getCorrectCount();
+
+        const wpm = Math.round(
+            (correctCount / 5) * (60 / elapsedSeconds)
+        );
+
+        const totalAttempts = correctCount + mistakes;
+
+        const accuracy = totalAttempts > 0
+            ? Math.round(
+                (correctCount / totalAttempts) * 100
+            )
+            : 100;
+
+        wpmDisplay.textContent = wpm;
+        accuracyDisplay.textContent = accuracy + "%";
+        mistakesDisplay.textContent = mistakes;
+    }
+
+    // ─── Keydown & Typing Handler ───
+    document.addEventListener("keydown", function (event) {
+
+        // Real-time Caps Lock detection
+        if (event.getModifierState && capsWarning) {
+            capsWarning.classList.toggle("active", event.getModifierState("CapsLock"));
+        }
+
+        // Global Tab shortcut to restart test immediately
+        if (event.key === "Tab") {
+            event.preventDefault();
+            resetTest();
+            paragraph.focus();
+            return;
+        }
+
+        // Global Escape shortcut to close results overlay or reset
+        if (event.key === "Escape") {
+            if (resultsOverlay.classList.contains("active")) {
+                resultsOverlay.classList.remove("active");
+                resetTest();
+                return;
+            }
+        }
+
+        // Allow auto-start when typing printable characters
+        if (!testStarted && !testFinished) {
+            if (
+                event.key.length === 1 &&
+                !event.ctrlKey &&
+                !event.altKey &&
+                !event.metaKey
+            ) {
+                startTest();
+            }
+        }
+
+        if (!testStarted || testFinished) return;
+
+        if (
+            event.ctrlKey ||
+            event.altKey ||
+            event.metaKey
+        ) return;
+
+        // Backspace handling
+        if (event.key === "Backspace") {
+
+            event.preventDefault();
+
+            if (currentIndex > 0) {
+                currentIndex--;
+            }
+
+            updateStats();
+
+            return;
+        }
+
+        if (
+            event.key === "Delete" ||
+            event.key.startsWith("Arrow") ||
+            event.key === "Home" ||
+            event.key === "End" ||
+            event.key === "Enter"
+        ) {
+
+            event.preventDefault();
+            return;
+        }
+
+        if (event.key.length === 1) {
+
+            event.preventDefault();
+
+            if (currentIndex >= targetText.length) return;
+
+            const isCorrect = (event.key === targetText[currentIndex]);
+
+            if (isCorrect) {
+
+                mistakePositions[currentIndex] = false;
+
+                currentIndex++;
+
+            }
+            else {
+
+                mistakes++;
+
+                mistakePositions[currentIndex] = true;
+
+                currentIndex++;
+
+            }
+
+            updateStats();
+        }
+
+    });
+
+    document.addEventListener("keyup", function (event) {
+        if (event.getModifierState && capsWarning) {
+            capsWarning.classList.toggle("active", event.getModifierState("CapsLock"));
+        }
+    });
+
+    paragraph.addEventListener("paste", function (event) {
+        event.preventDefault();
+    });
+
+    paragraph.addEventListener("beforeinput", function (event) {
+        event.preventDefault();
+    });
+
+    // Handle blur and focus states
+    paragraph.addEventListener("blur", function () {
+        if (testStarted && !testFinished) {
+            paragraphWrapper.classList.add("unfocused");
+            const promptSpan = focusPrompt ? focusPrompt.querySelector("span") : null;
+            if (promptSpan) promptSpan.textContent = "Click to resume typing";
+        }
+    });
+
+    paragraph.addEventListener("focus", function () {
+        paragraphWrapper.classList.remove("unfocused");
+    });
+
+    if (focusPrompt) {
+        focusPrompt.addEventListener("click", function () {
+            paragraph.focus();
+        });
+    }
+
+    paragraphWrapper.addEventListener("click", function () {
+        paragraph.focus();
+    });
+
+    startBtn.addEventListener("click", function () {
+        startTest();
+    });
+
+    restartBtn.addEventListener("click", function () {
+        resetTest();
+        paragraph.focus();
+        setMessage("Test restarted — ready to type");
+    });
+
+    if (modalRestartBtn) {
+        modalRestartBtn.addEventListener("click", function () {
+            resetTest();
+            paragraph.focus();
+        });
+    }
+
+    newParagraphBtn.addEventListener("click", function () {
+        resetTest();
+        paragraph.focus();
+        setMessage("New paragraph loaded — ready to type");
+    });
+
+    duration.addEventListener("change", function () {
+        const val = duration.value;
+        timePills.forEach(p => {
+            const isActive = p.getAttribute("data-time") === val;
+            p.classList.toggle("active", isActive);
+            p.setAttribute("aria-checked", isActive ? "true" : "false");
+        });
+        resetTest();
+        setMessage("Duration changed — test reset");
+    });
+
+    // ─── Time Pills Segmented Control ───
+    timePills.forEach(function (pill) {
+        pill.addEventListener("click", function () {
+            const timeValue = this.getAttribute("data-time");
+            duration.value = timeValue;
+
+            timePills.forEach(p => {
+                p.classList.remove("active");
+                p.setAttribute("aria-checked", "false");
+            });
+
+            this.classList.add("active");
+            this.setAttribute("aria-checked", "true");
+
+            resetTest();
+            paragraph.focus();
+        });
+    });
+
+    // ─── Theme Switcher (Dark / Light) ───
+    function initTheme() {
+        let savedTheme = "dark";
+        try {
+            savedTheme = localStorage.getItem("typequick-theme") || "dark";
+        } catch (e) {}
+        setTheme(savedTheme);
+    }
+
+    function setTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+        try {
+            localStorage.setItem("typequick-theme", theme);
+        } catch (e) {}
+
+        if (theme === "dark") {
+            themeIconSun.style.display = "block";
+            themeIconMoon.style.display = "none";
+        } else {
+            themeIconSun.style.display = "none";
+            themeIconMoon.style.display = "block";
+        }
+    }
+
+    themeToggle.addEventListener("click", function () {
+        const currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+        const newTheme = currentTheme === "dark" ? "light" : "dark";
+        setTheme(newTheme);
+    });
+
+    initTheme();
+    resetTest();
+
+</script>
+</body>
+</html>
